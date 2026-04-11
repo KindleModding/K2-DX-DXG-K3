@@ -1,0 +1,114 @@
+#!/bin/sh
+#
+# $Id: linkjail 15011 2018-06-02 16:58:21Z NiLuJe $
+#
+
+# Get hackname from the script's path (NOTE: Will only work for scripts called from /mnt/us/${KH_HACKNAME}/bin)
+KH_HACKNAME="${0##/mnt/us/}"
+KH_HACKNAME="${KH_HACKNAME%%/bin/*}"
+
+# Try to pull our custom helper lib
+_KH_FUNCS="/mnt/us/${KH_HACKNAME}/bin/libkh"
+if [ -f ${_KH_FUNCS} ] ; then
+    . ${_KH_FUNCS}
+else
+    # Pull default helper functions for logging
+    _FUNCTIONS=/etc/rc.d/functions
+    [ -f ${_FUNCTIONS} ] && . ${_FUNCTIONS}
+    # We couldn't get our custom lib, abort
+    msg "couldn't source libkh from '${KH_HACKNAME}'" W
+    exit 0
+fi
+
+# Always assume we do *NOT* want the custom key
+want_custom_key="false"
+
+# If there's a trigger file, always assume we want to use the custom key
+if [ -f "/mnt/us/ENABLE_HACK_UPDATES" ] ; then
+    want_custom_key="true"
+fi
+
+# Legacy method, matching a whitelist of hack filenames...
+if [ -f "/mnt/us/${KH_HACKNAME}/legacy" ] ; then
+    # Oh, Windows, how I hate thee... Note the crappy workaround needed for busybox's sed implementation...
+    sed -e "s/$(echo -ne '\r')$//g" -i ${LINKJAIL_BASEDIR}/etc/whitelist
+
+    # Check our whitelist of hacks to see if we need a custom key...
+    while read wl_hackname ; do
+        if [ -n "${wl_hackname}" ] ; then
+            for us_binfile in /mnt/us/*pdate*.bin ; do
+                case "${us_binfile##*/}" in
+                    ${wl_hackname}*.bin )
+                        # Our update file matches a whitelisted hack, request custom key
+                        kh_msg "found an update file matching '${wl_hackname}', requesting custom key" I q "request custom key for ${wl_hackname}"
+                        want_custom_key="true"
+                    ;;
+                esac
+            done
+        fi
+    done <${LINKJAIL_BASEDIR}/etc/whitelist
+else
+    # New method, checking the padding byte in the update header via KindleTool... (we have a 0.78% chance of false positive against an Amazon official update)
+    for us_binfile in /mnt/us/*pdate*.bin ; do
+        # Don't do anything if there's no proper update file...
+        if [ "${us_binfile}" == "/mnt/us/*pdate*.bin" ] ; then
+            kh_msg "no update file found" W
+        else
+            # Save KindleTool's output (Handle ash's stupid IFS default behaviour)
+            IFS='' ktool_output="$(/mnt/us/${KH_HACKNAME}/bin/kindletool convert -i ${us_binfile} 2>&1)"
+            # If it didn't exit succesfully, warn & don't request custom keys
+            if [ $? -ne 0 ] ; then
+                kh_msg "couldn't parse update file '${us_binfile##*/}', don't do anything" W q "failed to parse update file"
+            else
+                # Check OTA version
+                bin_ota="$(echo ${ktool_output} | sed -n -r 's/^(Bundle Type)([[:blank:]]*)(.*?)$/\3/p')"
+                if [ "${bin_ota}" != "OTA V1" ] ; then
+                    # Not an OTA V1? Shouldn't be happening on these devices!
+                    kh_msg "'${us_binfile##*/}' is not an OTA V1 package, don't do anything" W q "wrong update file type"
+                else
+                    # Check padding byte
+                    bin_pad="$(echo ${ktool_output} | sed -n -r 's/^(Padding Byte)([[:blank:]]*)([[:digit:]]*)( \()(.*?)(\))$/\5/p')"
+                    case "${bin_pad}" in
+                        "0x13" )
+                            # Python update tool
+                            kh_msg "'${us_binfile##*/}' was packaged by the python tool, requesting custom key" I q "request custom key (python)"
+                            want_custom_key="true"
+                        ;;
+                        "0x00" )
+                            # KindleTool
+                            kh_msg "'${us_binfile##*/}' was packaged by kindletool, requesting custom key" I q "request custom key (kindletool)"
+                            want_custom_key="true"
+                        ;;
+                        * )
+                            # Amazon?
+                            kh_msg "'${us_binfile##*/}' was packaged by amazon (${bin_pad}), keep default keys" I q "keep default keys (amazon)"
+                        ;;
+                    esac
+                fi
+            fi
+        fi
+    done
+fi
+
+# We want a custom key, enable it...
+if [ "${want_custom_key}" == "true" ] ; then
+    kh_msg "custom key requested" I
+
+    # Don't mount twice...
+    if ! grep -q "^fsp /etc/uks/pubprodkey01.pem" /proc/mounts ; then
+        kh_msg "mounting custom key" I q
+        mount --bind ${LINKJAIL_BASEDIR}/etc/pubhack.key /etc/uks/pubprodkey01.pem
+    else
+        kh_msg "looks like the custom key is already mounted" W
+    fi
+else
+    # Default keys. Do an unmount check, just in case...
+    kh_msg "default keys requested" I
+
+    if grep -q "^fsp /etc/uks/pubprodkey01.pem" /proc/mounts ; then
+        kh_msg "unmounting custom key" I q
+        umount -l /etc/uks/pubprodkey01.pem
+    else
+        kh_msg "nothing to do" I q
+    fi
+fi
