@@ -11,6 +11,8 @@ rm -rf build/k2
 mkdir -p build_tmp/k2
 mkdir -p build/k2
 
+set -e
+
 echo "[*] Building update-adds payload..."
 tar -czf ./build_tmp/k2/update-adds.tar.gz \
     --transform='flags=r;s|src/payload/root_link|root|' \
@@ -45,5 +47,6 @@ for model in ${KINDLE_MODELS} ; do
     cd src/k2/uninstall/
         kindletool create ota -d ${model} ./* ../../../build/k2/Update_${ARCH}_uninstall.bin
     cd ../../../
-    rm build/k2/${ARCH}.tgz
 done
+
+echo "Done."
