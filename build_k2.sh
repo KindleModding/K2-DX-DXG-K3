@@ -42,10 +42,10 @@ for model in ${KINDLE_MODELS} ; do
         --transform="flags=r;s|2.5-install.sh.sig|install.sh.sig|" \
         build_tmp/k2/*
 
-    kindletool create ota -d ${model} -xPackageName="NiLuJe Jailbreak" -xPackageVersion="v1.0.0" -xPackageAuthor="NiLuJe, yifanlu" -xPackageMaintainer="Hackerdude, NiLuJe" build/k2/${ARCH}.tgz build/k2/Update_${ARCH}_install.bin
+    kindletool create ota -d ${model} -xPackageName="NiLuJe Jailbreak" -xPackageVersion="v1.0.0" -xPackageAuthor="NiLuJe, yifanlu" -xPackageMaintainer="Hackerdude, NiLuJe" build/k2/${ARCH}.tgz build/k2/Update_jailbreak_${ARCH}_install.bin
     rm build/k2/${ARCH}.tgz
     cd src/k2/uninstall/
-        kindletool create ota -d ${model} ./* ../../../build/k2/Update_${ARCH}_uninstall.bin
+        kindletool create ota -d ${model} ./* ../../../build/k2/Update_jailbreak_${ARCH}_uninstall.bin
     cd ../../../
 done
 

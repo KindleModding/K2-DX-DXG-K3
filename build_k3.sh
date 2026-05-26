@@ -80,7 +80,7 @@ for model in ${KINDLE_MODELS} ; do
         "./build_tmp/k3_3.2.1/linkjail.tgz.sig" \
         "./build_tmp/k3_3.2.1/linkjail-init.sig"
 
-    kindletool create ota -d ${model} "build/k3_3.2.1/${model}.tgz" "./build/k3_3.2.1/Update_${model}_install.bin"
+    kindletool create ota -d ${model} "build/k3_3.2.1/${model}.tgz" "./build/k3_3.2.1/Update_jailbreak_${model}_install.bin"
     rm "build/k3_3.2.1/${model}.tgz"
 done
 
