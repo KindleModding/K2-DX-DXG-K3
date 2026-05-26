@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# $Id: unlinkjail 15011 2018-06-02 16:58:21Z NiLuJe $
+#
+
+# Get hackname from the script's path (NOTE: Will only work for scripts called from /mnt/us/${KH_HACKNAME}/bin)
+KH_HACKNAME="${0##/mnt/us/}"
+KH_HACKNAME="${KH_HACKNAME%%/bin/*}"
+
+# Try to pull our custom helper lib
+_KH_FUNCS="/mnt/us/${KH_HACKNAME}/bin/libkh"
+if [ -f ${_KH_FUNCS} ] ; then
+    . ${_KH_FUNCS}
+else
+    # Pull default helper functions for logging
+    _FUNCTIONS=/etc/rc.d/functions
+    [ -f ${_FUNCTIONS} ] && . ${_FUNCTIONS}
+    # We couldn't get our custom lib, abort
+    msg "couldn't source libkh from '${KH_HACKNAME}'" W
+    exit 0
+fi
+
+# Do we have stuff to unmount? (Always go back to default keys @ boot)
+if grep -q "^fsp /etc/uks/pubprodkey01.pem" /proc/mounts ; then
+    kh_msg "unmounting custom key" I
+    umount -l /etc/uks/pubprodkey01.pem
+else
+    kh_msg "nothing to do" I q
+fi
