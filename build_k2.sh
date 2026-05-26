@@ -22,7 +22,7 @@ tar -czf ./build_tmp/k2/update-adds.tar.gz \
     src/payload/root/opt/amazon/ebook/lib/json_simple-1.1.jar
 
 echo "[*] Copying files..."
-cp -ra src/k2/* build_tmp/k2/
+cp -ra src/k2/install/* build_tmp/k2/
 
 echo "[*] Building JB update files"
 KINDLE_MODELS="k2 k2i dx dxi dxg"
@@ -33,11 +33,14 @@ for model in ${KINDLE_MODELS} ; do
 	# Build install update
 	tar --hard-dereference \
         --owner root --group root \
-        -cvzf build_tmp/k2/${ARCH}.tgz \
+        -cvzf build/k2/${ARCH}.tgz \
         --transform='flags=r;s|build_tmp/k2/||' \
-        --transform="flags=r;s|2.5-jailbreak.dat|update_${ARCH}.dat|" \
+        --transform="flags=r;s|2.5-jailbreak.dat|update-filelist.dat|" \
+        --transform="flags=r;s|2.5-install.sh|install.sh|" \
+        --transform="flags=r;s|2.5-install.sh.sig|install.sh.sig|" \
         build_tmp/k2/*
 
-    kindletool create ota -d ${model} build_tmp/k2/${ARCH}.tgz build/k2/Update_${ARCH}_install.bin
+    kindletool create ota -d ${model} -xPackageName="NiLuJe Jailbreak" -xPackageVersion="v1.0.0" -xPackageAuthor="NiLuJe" -xPackageMaintainer="Hackerdude, NiLuJe" build/k2/${ARCH}.tgz build/k2/Update_${ARCH}_install.bin
     kindletool create ota -d ${model} src/k2/uninstall/uninstall.sh build/k2/Update_${ARCH}_uninstall.bin
+    rm build/k2/${ARCH}.tgz
 done
