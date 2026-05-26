@@ -19,7 +19,7 @@ mkdir -p build/k3_3.2.1
 set -e
 
 echo "[*] Building linkjail..."
-tar --hard-dereference --owner root --group root --exclude-vcs --transform="flags=r;s|src/k3/install/linkjail|src/linkjail|" -cvzf ./build_tmp/k3_3.0-3.2/linkjail.tgz.sig src/k3/install/linkjail/
+tar --hard-dereference --owner root --group root --exclude-vcs --transform="flags=r;s|src/k3/install/linkjail|src|" -cvzf ./build_tmp/k3_3.0-3.2/linkjail.tgz.sig src/k3/install/linkjail/
 
 echo "[*] Building for 3.0-3.2..."
 

@@ -15,13 +15,13 @@ set -e
 
 echo "[*] Building update-adds payload..."
 tar -czf ./build_tmp/k2/update-adds.tar.gz \
-    --transform='flags=r;s|src/payload/root_link|root|' \
-    --transform='flags=r;s|src/payload/||' \
+    --transform='flags=r;s|src/k2/payload/root_link|root|' \
+    --transform='flags=r;s|src/k2/payload/||' \
     --owner=root --group=root \
-    src/payload/root_link \
-    src/payload/root/etc/uks/pubhackkey01.pem \
-    src/payload/root/var/local/java/keystore/developer.keystore \
-    src/payload/root/opt/amazon/ebook/lib/json_simple-1.1.jar
+    src/k2/payload/root_link \
+    src/k2/payload/root/etc/uks/pubhackkey01.pem \
+    src/k2/payload/root/var/local/java/keystore/developer.keystore \
+    src/k2/payload/root/opt/amazon/ebook/lib/json_simple-1.1.jar
 
 echo "[*] Copying files..."
 cp -ra src/k2/install/* build_tmp/k2/

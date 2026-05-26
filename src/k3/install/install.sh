@@ -218,6 +218,13 @@ fi
 
 # That's very much inspired from official update scripts ;)
 cd src
+
+# Copy our payload files
+logmsg "I" "install" "" "Copying MKK payload"
+cp -ar "payload/developer.keystore" "/var/local/java/keystore/"
+cp -ar "payload/json_simple-1.1.jar" "/opt/amazon/ebook/lib"
+rm -rf payload/
+
 # And now we filter the content to preserve user's custom content
 for custom_file in ${HACK_EXCLUDE} ; do
     if [ -f "./${custom_file}" ] ; then
