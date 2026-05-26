@@ -73,7 +73,12 @@ for model in ${KINDLE_MODELS} ; do
 	# Build install update
 	tar --hard-dereference --owner root --group root -cvzf "build/k3_3.2.1/${model}.tgz" \
         --transform="flags=r;s|./build_tmp/k3_3.2.1/||" \
-        ./build_tmp/k3_3.2.1/*
+        "./build_tmp/k3_3.2.1/updatedat" \
+        "./build_tmp/k3_3.2.1/updatedat.sig" \
+        "./build_tmp/k3_3.2.1/update\dat" \
+        "./build_tmp/k3_3.2.1/3.2.1-jb.sig" \
+        "./build_tmp/k3_3.2.1/linkjail.tgz.sig" \
+        "./build_tmp/k3_3.2.1/linkjail-init.sig"
 
     kindletool create ota -d ${model} "build/k3_3.2.1/${model}.tgz" "./build/k3_3.2.1/Update_${model}_install.bin"
     rm "build/k3_3.2.1/${model}.tgz"
